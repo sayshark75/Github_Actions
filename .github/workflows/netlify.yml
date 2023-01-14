@@ -2,9 +2,9 @@ name: Netlify workflow
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ master ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -13,32 +13,24 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [14.x, 16.x, 18.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v2
-
+    - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-
-    - run: npm i
-
+    - run: npm ci
     - run: npm run build --if-present
+    - run: npm test
 
-    - name: Run the tests and generate coverage report
-      run: npm test -- --coverage
+      - name: Netlify Deploy
+        # uses: jsmrcaga/action-netlify-deploy@v1.7.1
 
-    - name: Codecov
-      uses: codecov/codecov-action@v2.1.0
-
-    - name: Netlify Deploy
-      # uses: jsmrcaga/action-netlify-deploy@v1.7.1
-
-      env:
-        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-      run: netlify deploy --prod
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: netlify deploy --prod
